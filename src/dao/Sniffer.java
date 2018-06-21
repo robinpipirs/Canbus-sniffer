@@ -42,7 +42,7 @@ public class Sniffer {
 
         CanbusLogFileParser canbusLogfileParser = new CanbusLogFileParser();
         canBusMessagesToFilter = canbusLogfileParser
-                .ParseCanBusLog("bin/filters.asc");
+                .ParseCanBusLog("/filters.asc");
 
         List<CanbusMessage> messagesToFilter = new ArrayList<CanbusMessage>(canBusMessagesToFilter);
 

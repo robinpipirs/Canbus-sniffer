@@ -4,8 +4,13 @@ package dao;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.nio.file.Path;
 import java.util.ArrayList;
+
+import jdk.internal.util.xml.impl.ReaderUTF16;
+import jdk.internal.util.xml.impl.ReaderUTF8;
 
 /**
  * Created by robinpipirs on 10/03/16.
@@ -24,8 +29,10 @@ public class CanbusLogFileParser {
         try {
 
             String sCurrentLine;
-
-            br = new BufferedReader(new FileReader(path));
+          
+            br = new BufferedReader(new ReaderUTF8(Sniffer.class.getResourceAsStream(path)));
+           
+            //br = new BufferedReader(new FileReader(path));
 
             while ((sCurrentLine = br.readLine()) != null) {
 

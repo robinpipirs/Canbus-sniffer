@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path=""/>
+	<classpathentry kind="lib" path="/Users/robinpipirs/Canbus-sniffer/src/lib/gson-2.8.2.jar"/>
+	<classpathentry kind="lib" path="/Users/robinpipirs/Canbus-sniffer/src/lib/jSerialComm-2.0.2.jar"/>
+	<classpathentry kind="output" path=""/>
+</classpath>
