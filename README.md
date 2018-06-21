@@ -1,7 +1,7 @@
 # Canbus-sniffer
 Canbus-sniffer
 
-![Image of software gui](https://robinpipirs.github.com/content/canbussniffer.png)
+![Image of software gui](https://github.com/robinpipirs/content/canbussniffer.png)
 
 Filters.asc is an example filter file. If you export data then you want it to look like this.
 
