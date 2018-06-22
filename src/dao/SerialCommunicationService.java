@@ -18,7 +18,6 @@ public class SerialCommunicationService implements Runnable {
     private InputStream in;
     private OutputStream sos;
     private SerialPort comPort;
-    private String comPortName;
     private int baudRate;
     private String canbusString = "";
     private String[] sendMessage = {"01", "20", "80", "35", "42", "9D", "20", "59", "60", "00", "AA"};
@@ -29,10 +28,22 @@ public class SerialCommunicationService implements Runnable {
     private CanbusMessage canbusMessage;
     private CanbusLogFileParser canbusLogFileParser = new CanbusLogFileParser();
 
-    SerialCommunicationService(String portName, int baudRate)
+    SerialCommunicationService(int baudRate)
     {
-    		comPortName = portName;
     		this.baudRate = baudRate;
+    }
+    
+    public void Disconnect() {
+    		stop();
+    		try {
+        		in.close();
+        		sos.close();
+        		comPort.closePort();
+    		}
+    		catch (Exception e) {
+				// TODO: handle exception
+    				System.out.println(e);
+			}
     }
 
     public OutputStream getOutPutStream(){
@@ -67,40 +78,63 @@ public class SerialCommunicationService implements Runnable {
             observer.update();
         }
     }
+    
+    public void start(String portName) {
 
+		comPort = SerialPort.getCommPort(portName);
+		comPort.setBaudRate(baudRate);
+		comPort.openPort();
+		comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
+		in = comPort.getInputStream();
+		sos = comPort.getOutputStream();
+		
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    		running = true;
+    }
+    
+    public void stop() {
+    		running = false;
+    }
+   
 
     @Override
     public void run() {
-        running = true;
-        comPort = SerialPort.getCommPort(comPortName);
-        comPort.setBaudRate(baudRate);
-        comPort.openPort();
-        comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
-        in = comPort.getInputStream();
-        sos = comPort.getOutputStream();
+    	
         try
         {
-            while(running){
-                char c = (char)in.read();
+            while(true){
+            	
+            		if(running) 
+            		{
+            			char c = (char)in.read();
 
-                if (c != '\n')
-                {
-                    canbusString = canbusString + String.valueOf(c);
-                }
-                else {
-                    //System.out.println("debug: "+canbusString);
-                    canbusMessage = canbusLogFileParser.ParseCanBusStringFromInputSerial(canbusString);
-                    //System.out.println("parsed message: " +canbusMessage);
-                    if ((canbusMessage != null) && !canbusMessage.getId().equals("TO")){
-                        setMessage(canbusMessage);
+                    if (c != '\n')
+                    {
+                        canbusString = canbusString + String.valueOf(c);
                     }
-                    //System.out.println("can: "+canbusString);
-                    canbusString = "";
-                }
-                //Raw: 01 20 80 35 42 9D 20 59 60 00 (AA 0A) = 11 bytes
-
+                    else {
+                        //System.out.println("debug: "+canbusString);
+                        canbusMessage = canbusLogFileParser.ParseCanBusStringFromInputSerial(canbusString);
+                        //System.out.println("parsed message: " +canbusMessage);
+                        if ((canbusMessage != null) && !canbusMessage.getId().equals("TO")){
+                            setMessage(canbusMessage);
+                        }
+                        //System.out.println("can: "+canbusString);
+                        canbusString = "";
+                    }
+                    //Raw: 01 20 80 35 42 9D 20 59 60 00 (AA 0A) = 11 bytes
+                    Thread.sleep(1);
+            		}
+            		else {
+            			Thread.sleep(100);
+            		}
+            	     
             }
-            in.close();
         } catch (Exception e) {
             e.printStackTrace();
             running = false;

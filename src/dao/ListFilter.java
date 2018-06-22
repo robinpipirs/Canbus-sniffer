@@ -32,13 +32,13 @@ public class ListFilter implements Filter {
 //        System.out.println("CONTAINS THIS MESSAGE: "+filterList.contains(canCan));
 //        System.out.println("C: "+filterList.contains(canCan) +" "+canCan.toListString() + " "+canCan.getTimestamp());
 //        System.out.println("C: "+filterList.contains(request) +" "+request.toListString() + " "+request.getTimestamp());
-//        if (filterList.contains(request)){
-//            return null;
-//        }
-         if(!request.getId().equals("6A6")) 
-        {
-        		return null;
+        if (filterList.contains(request)){
+            return null;
         }
+//         if(!request.getId().equals("6A6")) 
+//        {
+//        		return null;
+//        }
         else return request;
     }
 }

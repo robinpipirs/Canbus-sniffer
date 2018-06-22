@@ -1,4 +1,4 @@
 {
-	"BaudRate": "115200",
+	"BaudRate": "230400",
 	"ComportName": "tty.usbserial-DN00YNAN"
 }

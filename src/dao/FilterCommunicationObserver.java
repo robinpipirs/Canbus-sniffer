@@ -9,9 +9,10 @@ public class FilterCommunicationObserver extends CommunicationObserver {
 
     private FilterManager filterManager;
 
-    public FilterCommunicationObserver(SerialCommunicationService serialCommunicationService, JTextArea jta) {
+    public FilterCommunicationObserver(SerialCommunicationService serialCommunicationService, JTextArea jta, DefaultListModel model) {
         this.serialCommunicationService = serialCommunicationService;
         this.jta = jta;
+        this.model = model;
         this.serialCommunicationService.attach(this);
     }
 

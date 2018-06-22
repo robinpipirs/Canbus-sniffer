@@ -86,16 +86,6 @@ public class CanbusLogFileParser {
                     data[i] = tokens[5 + i];
                 }
             }
-//            String s = "";
-//            for (int j = 0; j < data.length;j++){
-//                s = s +" " +data[j];
-//            }
-//            System.out.println(s);
-
-           // System.out.println("time:" + time);
-           // System.out.println("id:"+ id);
-           // System.out.println("data:"  + dataString);
-
 
             //TODO: Test the structure of the message after parsing
 

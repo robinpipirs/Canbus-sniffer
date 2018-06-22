@@ -9,5 +9,6 @@ import javax.swing.*;
 public abstract class CommunicationObserver {
     protected SerialCommunicationService serialCommunicationService;
     protected JTextArea jta;
+    protected DefaultListModel model;
     public abstract void update();
 }

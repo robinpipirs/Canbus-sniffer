@@ -7,7 +7,7 @@ import java.util.List;
 public class FilterChain {
     private List<Filter> filters = new ArrayList<>();
     private List<CanbusMessage> filteredMessages = new ArrayList<>();
-    private JTextArea target;
+    private DefaultListModel target;
 
     public void addFilter(Filter filter){
         filters.add(filter);
@@ -17,15 +17,24 @@ public class FilterChain {
     //TODO: lets through filter
     public void execute(CanbusMessage request){
         for (Filter filter : filters) {
+        		
+        	
+//        	if(request.getId().equals("5BF")){
+//				System.out.println("sss");
+//			}
+        	
+        	
             CanbusMessage canbusMessage =filter.execute(request);
             if (canbusMessage != null){
-                target.append(canbusMessage.toListString()+"\n");
+                target.addElement(canbusMessage.toListString());
+                
+                
             }
         }
 
     }
 
-    public void setTarget(JTextArea target){
-        this.target = target;
+    public void setTarget(DefaultListModel target2){
+        this.target = target2;
     }
 }

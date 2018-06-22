@@ -4,6 +4,8 @@ package dao;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.io.*;
 import java.util.*;
 
@@ -13,6 +15,7 @@ import com.fazecast.jSerialComm.*;
 import com.google.gson.*;
 
 import javax.swing.*;
+import javax.swing.event.ListDataListener;
 import javax.swing.text.DefaultCaret;
 
 /**
@@ -45,23 +48,49 @@ public class Sniffer {
                 .ParseCanBusLog("/filters.asc");
 
         List<CanbusMessage> messagesToFilter = new ArrayList<CanbusMessage>(canBusMessagesToFilter);
-
+        Set<CanbusMessage> hs = new HashSet<>();
+        hs.addAll(messagesToFilter);
+        messagesToFilter.clear();
+        messagesToFilter.addAll(hs);
+        
         /** Setting up SerialcomService **/
-        SerialCommunicationService scs = new SerialCommunicationService(config.getComportName(),Integer.parseInt(config.getBaudRate()));
-       
+        SerialCommunicationService scs = null;
+        
+        scs  = new SerialCommunicationService(Integer.parseInt(config.getBaudRate()));
+         
+        SerialPort serials[] = SerialPort.getCommPorts();
+       // SerialPort serials[] = new SerialPort[5];
         /** things happening in the gui here **/
         CanbusDataView canBusView = new CanbusDataView();
         new LiveCommunicationObserver(scs, canBusView.getView());
+        
+        SerialPortView scsView = new SerialPortView(scs);
+        scsView.updatePorts(serials);
+        
+        
+        
+        
+        // TODO: do this
+       // new ScsPortObserver(scs, scsView.getView());
+        
 
-        FilterManager filterManager = new FilterManager(canBusView.getFilterView());
+        
 
         ListFilter listFilter = new ListFilter(messagesToFilter);
-        filterManager.setFilter(listFilter);
+        
 
-        new FilterCommunicationObserver(scs,canBusView.getFilterView()).setFilterManager(filterManager);
+        FilterListModel fm = new FilterListModel(listFilter);
+        
+        FilterManager filterManager = new FilterManager(canBusView.getListModel());
+        filterManager.setFilter(listFilter);
+        
+        new FilterCommunicationObserver(scs,canBusView.getFilterView(), canBusView.getListModel()).setFilterManager(filterManager);
         final Thread thread = new Thread(scs);
         thread.start();
 
+        
+        AddSelectionModel adsm = new AddSelectionModel(canBusView.getList() ,canBusView.getListModel(), fm.getListModel(), listFilter);
+       
         /** Gui is built here**/
 
         JFrame mainJFrame;
@@ -70,20 +99,84 @@ public class Sniffer {
         mainJFrame.setTitle("PipirsSolutions canbus sniffer");
         mainJFrame.setBackground(Color.BLUE);
 
+        mainJFrame.add(scsView,BorderLayout.NORTH);
         mainJFrame.add(canBusView,BorderLayout.WEST);
         JPanel messageAndFilterPanel = new JPanel(new BorderLayout());
         messageAndFilterPanel.add(new SendMessageModel(scs),BorderLayout.NORTH);
-        messageAndFilterPanel.add(new FilterListModel(listFilter),BorderLayout.SOUTH);
+        messageAndFilterPanel.add(adsm, BorderLayout.WEST);
+        messageAndFilterPanel.add(fm,BorderLayout.SOUTH);
         mainJFrame.add(messageAndFilterPanel, BorderLayout.EAST);
         mainJFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainJFrame.pack();
         mainJFrame.setVisible(true);
 
         /** connecting ui components to the services**/
-
-
     }
+    
+    public static class AddSelectionModel extends JPanel {
+    	
+    		private JButton copyBtn = new JButton(">> Copy to filterlist");
+    		
+    		private DefaultListModel<CanbusMessage>  m1;
+    		private DefaultListModel<CanbusMessage>  m2;
+    		private JList l1;
+    		private ListFilter lf;
+    		
+    		
+    		public AddSelectionModel(JList jList, DefaultListModel  messageModel, DefaultListModel filterModel, ListFilter listFilter) {
+    			
+    			m1 = messageModel;
+    			m2 = filterModel;
+    			l1 = jList;
+    			lf = listFilter;
+    			
+    			
+    			JPanel panel = new JPanel(new BorderLayout());
+    			
+    				//copyBtn.setBounds(x, y, width, height);
+    			
 
+                copyBtn.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                    
+                    	int[] indexes = jList.getSelectedIndices();
+                    	for (int index : indexes) {
+							filterModel.addElement(messageModel.getElementAt(index));
+
+							String[] canStringArray = messageModel.getElementAt(index).toString().split(" ");			
+							String tmpId = canStringArray[1];
+									
+							ArrayList<String> tmpData = new ArrayList<String>();
+							
+							for (int i = 3; i < canStringArray.length; i++) {
+								 tmpData.add(canStringArray[i]);
+							
+							}
+							
+							String[] dataArray = new String[tmpData.size()];
+							dataArray = tmpData.toArray(dataArray);
+							
+							CanbusMessage cm = new CanbusMessage("1234", tmpId, dataArray);
+							
+							listFilter.addToList(cm);
+							
+						}
+                    }
+                });
+                
+                copyBtn.setSize(15, 15);
+                BorderLayout bl = new BorderLayout();
+                panel.add(copyBtn);
+                
+                BorderLayout layout = new BorderLayout();
+                layout.setVgap(5);
+                layout.setHgap(5);
+                setLayout(layout);
+          
+                add(panel);
+    		}
+    }
+    
     public static class SendMessageModel extends JPanel {
 
         private JButton sendBtn = new JButton("Send!");
@@ -91,6 +184,7 @@ public class Sniffer {
         private JTextField data = new JTextField(10);
         private SerialCommunicationService scs;
 
+        
         public SendMessageModel(SerialCommunicationService scs){
             this.scs=scs;
             JPanel panel = new JPanel(new BorderLayout());
@@ -147,6 +241,9 @@ public class Sniffer {
 
         private JTextArea jta;
         private JTextArea jtaFiltered;
+        
+        JList listFiltered;
+        DefaultListModel model;
 
         public JTextArea getView(){
             return jta;
@@ -154,6 +251,14 @@ public class Sniffer {
         public JTextArea getFilterView(){
           return jtaFiltered;
         }
+        
+        public JList getList(){
+            return listFiltered;
+        }
+        
+        public DefaultListModel getListModel() {
+    		return model;
+    }
 
         public CanbusDataView() {
 
@@ -168,6 +273,7 @@ public class Sniffer {
             bar.setPreferredSize(new Dimension(10, 0));
 
             jtaFiltered = new JTextArea(40, 40);
+            
             DefaultCaret caret2 = (DefaultCaret) jtaFiltered.getCaret();
             caret2.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
             jtaFiltered.append("Filtered canBusSignal will appear here.\n");
@@ -177,13 +283,95 @@ public class Sniffer {
             JScrollBar bar2 = spFiltered.getVerticalScrollBar();
             bar2.setPreferredSize(new Dimension(10, 0));
 
+            model = new DefaultListModel();
+            listFiltered = new JList(model);
+
+            JScrollPane paneFiltered = new JScrollPane(listFiltered,
+                    JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                    JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+            
+            paneFiltered.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+				
+				@Override
+				public void adjustmentValueChanged(AdjustmentEvent e) {
+					// TODO Auto-generated method stub
+					e.getAdjustable().setValue(e.getAdjustable().getMaximum()); 
+				}
+			});
+            
+            paneFiltered.setPreferredSize(new Dimension(400, 400));
+            
             JPanel jView = new JPanel(new BorderLayout());
             jView.add(sp, BorderLayout.WEST);
             jView.add(new JPanel(), BorderLayout.CENTER);
-            jView.add(spFiltered, BorderLayout.EAST);
+            //jView.add(spFiltered, BorderLayout.EAST);
+            jView.add(paneFiltered, BorderLayout.EAST);
 
             add(jView);
+        }
+    }
+    
+    public static class SerialPortView extends JPanel {
+    	
+    		private SerialCommunicationService scs;
+        private JComboBox<String> comboBox;
+        private JButton connBtn = new JButton("Connect!");
+        private JButton discBtn = new JButton("Disconnect!");
+        private DefaultListModel<String> model;
+        
+        public JComboBox<String> getComportView(){
+            return comboBox;
+        }
 
+        public void updatePorts(SerialPort[] serials){
+        	
+        		ArrayList<String> options = new ArrayList<String>();
+        
+    			//comboBox.removeAll();
+        		for (SerialPort serial : serials) { 
+        			if(serial != null) {
+
+            			options.add(serial.getSystemPortName()); 
+        			}
+        			}
+      		
+        		String[] stockArr = new String[options.size()];
+        		stockArr = options.toArray(stockArr);
+        		
+        		
+        		JComboBox<String> tempModel = new JComboBox<>(stockArr);
+        		ComboBoxModel<String> tm = tempModel.getModel();
+        		comboBox.setModel(tm);
+        		
+        }
+        
+        public SerialPortView(SerialCommunicationService serialCommunicationService) {
+            
+        		scs = serialCommunicationService;
+	        	comboBox = new JComboBox<String>(new String[] {""}) ;
+	        	comboBox.setBounds(315, 47, 150, 25);
+        		
+            JPanel jView = new JPanel(new BorderLayout());
+            jView.add(comboBox, BorderLayout.WEST);
+            connBtn.setPreferredSize(new Dimension(80,25));
+            connBtn.setPreferredSize(new Dimension(80,25));
+            
+            connBtn.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                	//comboBox.getSelectedItem().toString()
+                		scs.start(comboBox.getSelectedItem().toString());
+                }
+            });
+            
+            discBtn.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                   scs.Disconnect();
+                }
+            });
+            
+            jView.add(connBtn, BorderLayout.CENTER);
+            jView.add(discBtn, BorderLayout.EAST);
+            add(jView);
         }
     }
 
@@ -196,10 +384,15 @@ public class Sniffer {
         private List<CanbusMessage> canList;
         private ListFilter listFilter;
 
+        public DefaultListModel<CanbusMessage> getListModel() {
+        		return model;
+        }
+        
         public FilterListModel(ListFilter listFilter) {
+        	
             this.listFilter = listFilter;
             setLayout(new BorderLayout());
-            model = new DefaultListModel();
+            model = new DefaultListModel<CanbusMessage>();
             list = new JList(model);
             JScrollPane pane = new JScrollPane(list);
             JButton addButton = new JButton("Add");

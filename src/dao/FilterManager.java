@@ -5,7 +5,7 @@ import javax.swing.*;
 public class FilterManager {
     FilterChain filterChain;
 
-    public FilterManager(JTextArea target){
+    public FilterManager(DefaultListModel target){
         filterChain = new FilterChain();
         filterChain.setTarget(target);
     }
