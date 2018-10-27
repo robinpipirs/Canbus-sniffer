@@ -6,6 +6,11 @@ Canbus-sniffer
 ## Compiled version
 ``https://drive.google.com/open?id=1XDWbQhnP70uFuJZPPf9U-Hgv6lp-syyz``
 
+## What is needed
+You also should visit my other repository for the arduino client.
+Im using it with an sparkfun redboard, and canbusshield.   
+repository: ``canbus-sniffer-arduino-to-serial``
+
 ## Filtering with Filters.asc
 At program start it looks for Filters.asc and scans for the data avaiable.
 
