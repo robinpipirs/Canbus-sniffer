@@ -9,6 +9,8 @@ The structure needed of messages to filter in filter.asc file is as following:
 >T: 14142 ID: 22, Data: 1 E2 1 E2 0 0 0 F0
 
 
-You can add selction by pushing ``>>`` button to filterlist. or write ``id`` + ``data`` and then add button.
+You can add selection from filteredview to filterlist by clicking the ``>>`` button. 
+
+You can also manually add an filtered item in the boxes att the bottom ``id`` + ``data`` and then add button.
 
 
