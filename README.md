@@ -36,4 +36,6 @@ The software is opensource. You can download and develop yourself if you like.
 I however don't have a lot of time to develop on this since I have another job too. Might set up donations in the future so I can focus on it more.
 
 ## Known buggs
-* resizing window.
+* resizing window, should not be hiding components.   
+* Adding items to filterlist, if you mark multiple identical items and filter theres nothing stopping user from adding multiples.   
+* Filterlist size, and liveview size. Today the lists are not purged. So eventually you will use up memory.
