@@ -16,4 +16,9 @@ public class FilterManager {
     public void filterRequest(CanbusMessage request){
         filterChain.execute(request);
     }
+    
+    public void setCounter(JTextField cntr) 
+    {
+    		filterChain.addCounter(cntr);
+    }
 }

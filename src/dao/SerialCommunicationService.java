@@ -3,6 +3,8 @@ package dao;
 
 
 import com.fazecast.jSerialComm.SerialPort;
+import com.fazecast.jSerialComm.SerialPortDataListener;
+import com.fazecast.jSerialComm.SerialPortEvent;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,9 +17,10 @@ import java.util.List;
  */
 public class SerialCommunicationService implements Runnable {
 
-    private InputStream in;
-    private OutputStream sos;
-    private SerialPort comPort;
+    private static InputStream in;
+    private static OutputStream sos;
+    private String lastPortName = null;
+    private static SerialPort comPort;
     private int baudRate;
     private String canbusString = "";
     private String[] sendMessage = {"01", "20", "80", "35", "42", "9D", "20", "59", "60", "00", "AA"};
@@ -34,16 +37,7 @@ public class SerialCommunicationService implements Runnable {
     }
     
     public void Disconnect() {
-    		stop();
-    		try {
-        		in.close();
-        		sos.close();
-        		comPort.closePort();
-    		}
-    		catch (Exception e) {
-				// TODO: handle exception
-    				System.out.println(e);
-			}
+    		closePort();
     }
 
     public OutputStream getOutPutStream(){
@@ -80,67 +74,191 @@ public class SerialCommunicationService implements Runnable {
     }
     
     public void start(String portName) {
-
-		comPort = SerialPort.getCommPort(portName);
-		comPort.setBaudRate(baudRate);
-		comPort.openPort();
-		comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, 100, 0);
-		in = comPort.getInputStream();
-		sos = comPort.getOutputStream();
 		
 		try {
-			Thread.sleep(100);
+			// TODO: fix this§
+			comPort = null;
+			comPort = createPort(portName);
+			boolean isOpesn = comPort.isOpen();
+			
+			if(comPort == null) {
+				System.out.println("error finding port");
+				return;
+			}
+			
+			boolean isOpen = comPort.openPort();
+		    System.out.println("port open?.."+ isOpen);
+			
+			//in = comPort.getInputStream();
+			
+			comPort.addDataListener(new SerialPortDataListener() {
+				
+				@Override
+				public void serialEvent(SerialPortEvent event) {
+					// TODO Auto-generated method stub
+					int avail = event.getSerialPort().bytesAvailable();
+			        if (avail == 0) {
+			            return;
+			        }
+			        String strRead;
+			        try {
+			        		byte[] newData = new byte[comPort.bytesAvailable()];
+			            int numRead = comPort.readBytes(newData, newData.length);
+			           // System.out.println("Read " + numRead + " bytes.");
+
+			            	for (byte b : newData) {
+			            		char c = (char) b;
+						
+			            		if (c != '\n')
+			    	            {
+			    	                canbusString = canbusString + String.valueOf(c);
+			    	            }
+			    	            else {
+			    	                //System.out.println("debug: "+canbusString);
+			    	                canbusMessage = canbusLogFileParser.ParseCanBusStringFromInputSerial(canbusString);
+			    	                //System.out.println("parsed message: " +canbusMessage);
+			    	                if ((canbusMessage != null) && !canbusMessage.getId().equals("TO")){
+			    	                    setMessage(canbusMessage);
+			    	                }
+			    	                //System.out.println("can: "+canbusString);
+			    	                canbusString = "";
+			    	            }
+			            		
+			            	}
+			            
+			            }
+			        catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+    
+				}
+				
+				@Override
+				public int getListeningEvents() {
+					// TODO Auto-generated method stub
+					return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+				}
+			});
+			
+			
+			
+			//sos = comPort.getOutputStream();
+			
+			Thread.sleep(300);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
     		running = true;
+	
     }
+    
+//    public void serialEvent(SerialPortEvent event) {
+//        int avail = event.getSerialPort().bytesAvailable();
+//        if (avail == 0) {
+//            return;
+//        }
+//       // char c = (char)in.read();
+//        try {
+//        	
+//        		byte[] newData = new byte[comPort.bytesAvailable()];
+//            int numRead = comPort.readBytes(newData, newData.length);
+//            System.out.println("Read " + numRead + " bytes.");
+//        	
+//        	
+////            char c = (char)in.read();
+////
+////            if (c != '\n')
+////            {
+////                canbusString = canbusString + String.valueOf(c);
+////            }
+////            else {
+////                //System.out.println("debug: "+canbusString);
+////                canbusMessage = canbusLogFileParser.ParseCanBusStringFromInputSerial(canbusString);
+////                //System.out.println("parsed message: " +canbusMessage);
+////                if ((canbusMessage != null) && !canbusMessage.getId().equals("TO")){
+////                    setMessage(canbusMessage);
+////                }
+////                //System.out.println("can: "+canbusString);
+////                canbusString = "";
+////            }
+////            //Raw: 01 20 80 35 42 9D 20 59 60 00 (AA 0A) = 11 bytes
+////            Thread.sleep(1);
+////            
+//            
+//            
+//            
+//            }
+//        		catch (Exception e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+//    }
+    
+    
+    public SerialPort createPort(String portName) {
+
+        SerialPort port = null;
+        for (SerialPort p : SerialPort.getCommPorts()) {
+        		String systemPortName = p.getSystemPortName();
+            if (portName.equals(systemPortName)) {
+            		port = p;
+                port.setComPortParameters(115200, 8, 1, SerialPort.NO_PARITY);
+                break;
+            }
+        }
+        return port;
+    }
+    
+    public void closePort() {
+        if (comPort != null) {
+            comPort.setComPortTimeouts(SerialPort.TIMEOUT_NONBLOCKING, 0, 0);
+            comPort.removeDataListener();
+            System.out.println("Going to close the port...");
+            boolean result = comPort.closePort();
+            System.out.println("Port closed? .."+ result);
+        }
+    }
+     
     
     public void stop() {
     		running = false;
+    		try {
+    		
+			in.close();
+			//sos.close();
+			in = null;
+			sos = null;
+			closePort();
+    			
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
     }
    
 
     @Override
     public void run() {
-    	
+
         try
         {
             while(true){
-            	
-            		if(running) 
-            		{
-            			char c = (char)in.read();
-
-                    if (c != '\n')
-                    {
-                        canbusString = canbusString + String.valueOf(c);
-                    }
-                    else {
-                        //System.out.println("debug: "+canbusString);
-                        canbusMessage = canbusLogFileParser.ParseCanBusStringFromInputSerial(canbusString);
-                        //System.out.println("parsed message: " +canbusMessage);
-                        if ((canbusMessage != null) && !canbusMessage.getId().equals("TO")){
-                            setMessage(canbusMessage);
-                        }
-                        //System.out.println("can: "+canbusString);
-                        canbusString = "";
-                    }
-                    //Raw: 01 20 80 35 42 9D 20 59 60 00 (AA 0A) = 11 bytes
-                    Thread.sleep(1);
-            		}
-            		else {
-            			Thread.sleep(100);
-            		}
-            	     
+            	Thread.sleep(100);
             }
         } catch (Exception e) {
             e.printStackTrace();
             running = false;
-        }
-        comPort.closePort();
+            comPort.closePort();
+        }   
     }
+
+	public SerialPort[] getComports() {
+		
+		// TODO Auto-generated method stub
+		return comPort.getCommPorts();
+	}
 
 }
 //sos.write(new byte[]{

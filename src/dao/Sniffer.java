@@ -13,6 +13,7 @@ import java.util.List;
 
 import com.fazecast.jSerialComm.*;
 import com.google.gson.*;
+import com.sun.crypto.provider.AESParameters;
 
 import javax.swing.*;
 import javax.swing.event.ListDataListener;
@@ -58,7 +59,7 @@ public class Sniffer {
         
         scs  = new SerialCommunicationService(Integer.parseInt(config.getBaudRate()));
          
-        SerialPort serials[] = SerialPort.getCommPorts();
+        SerialPort serials[] = scs.getComports();
        // SerialPort serials[] = new SerialPort[5];
         /** things happening in the gui here **/
         CanbusDataView canBusView = new CanbusDataView();
@@ -76,7 +77,9 @@ public class Sniffer {
 
         
 
-        ListFilter listFilter = new ListFilter(messagesToFilter);
+        ArrayList<CanbusMessage> emptyList = new ArrayList<>();
+//        ListFilter listFilter = new ListFilter(messagesToFilter);
+        ListFilter listFilter = new ListFilter(emptyList);
         
 
         FilterListModel fm = new FilterListModel(listFilter);
@@ -91,6 +94,8 @@ public class Sniffer {
         
         AddSelectionModel adsm = new AddSelectionModel(canBusView.getList() ,canBusView.getListModel(), fm.getListModel(), listFilter);
        
+        filterManager.setCounter(adsm.getCounter());
+        
         /** Gui is built here**/
 
         JFrame mainJFrame;
@@ -115,13 +120,18 @@ public class Sniffer {
     
     public static class AddSelectionModel extends JPanel {
     	
-    		private JButton copyBtn = new JButton(">> Copy to filterlist");
+    		private JButton copyBtn = new JButton(">>");
     		
-    		private DefaultListModel<CanbusMessage>  m1;
+    		private JTextField cntr = new JTextField(10);
+    	
+		private DefaultListModel<CanbusMessage>  m1;
     		private DefaultListModel<CanbusMessage>  m2;
     		private JList l1;
     		private ListFilter lf;
     		
+    		public JTextField getCounter() {
+				return cntr;
+			}
     		
     		public AddSelectionModel(JList jList, DefaultListModel  messageModel, DefaultListModel filterModel, ListFilter listFilter) {
     			
@@ -165,8 +175,11 @@ public class Sniffer {
                 });
                 
                 copyBtn.setSize(15, 15);
+                cntr.setSize(10, 15);
+                cntr.setSize(10, 5);
                 BorderLayout bl = new BorderLayout();
-                panel.add(copyBtn);
+                panel.add(copyBtn, BorderLayout.WEST);
+                panel.add(cntr, BorderLayout.CENTER );
                 
                 BorderLayout layout = new BorderLayout();
                 layout.setVgap(5);
