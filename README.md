@@ -27,10 +27,13 @@ You can add selection from filteredview to filterlist by clicking the ``>>`` but
 
 You can also manually add an filtered item in the boxes att the bottom ``id`` + ``data`` and then add button.
 
-## Message counter.
+## Message counter
 The message counter will appear once you start the program.
 Today the software just appends items to the lists, so theres an risk you will run out of memory or that the program will run slower after a while.
 
 ## Future development
 The software is opensource. You can download and develop yourself if you like.
 I however don't have a lot of time to develop on this since I have another job too. Might set up donations in the future so I can focus on it more.
+
+## Known buggs
+* resizing window.
