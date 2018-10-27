@@ -15,12 +15,12 @@ public class ListFilter implements Filter {
     }
     public void addToList(CanbusMessage msg){
         filterList.add(msg);
-        System.out.println(filterList.contains(msg));
+      //  System.out.println(filterList.contains(msg));
     }
     public void removeFromList(CanbusMessage msg){
-        System.out.println(filterList.contains(msg));
+     //   System.out.println(filterList.contains(msg));
         filterList.remove(msg);
-       System.out.println(filterList.contains(msg));
+     //  System.out.println(filterList.contains(msg));
 
     }
     public List<CanbusMessage> getList(){

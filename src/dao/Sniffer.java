@@ -427,7 +427,7 @@ public class Sniffer {
                     String canData = data.getText();
                     if ((canId.length() > 2) || (canId.length() < 3) && canData.length() > 2){
                         String canString = "T: 0 ID: " + canId + ", Data: " + canData;
-                        System.out.println(canString);
+                     //   System.out.println(canString);
                         CanbusMessage canbusMessage = canbusLogFileParser.ParseCanBusString(canString);
                         if (canbusMessage != null){
                             model.addElement(canbusMessage.toListString());

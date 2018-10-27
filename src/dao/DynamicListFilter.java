@@ -18,7 +18,7 @@ public class DynamicListFilter implements Filter {
     @Override
     public CanbusMessage execute(CanbusMessage request) {
         if (filterList.contains(request)){
-            System.out.println("Dynamic entry filter found filtering");
+           // System.out.println("Dynamic entry filter found filtering");
             return null;
         }
         else return request;
