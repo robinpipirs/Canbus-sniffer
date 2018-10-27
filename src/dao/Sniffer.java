@@ -93,23 +93,41 @@ public class Sniffer {
 
         
         AddSelectionModel adsm = new AddSelectionModel(canBusView.getList() ,canBusView.getListModel(), fm.getListModel(), listFilter);
-       
-        filterManager.setCounter(adsm.getCounter());
+        AddCounterModel adcm = new AddCounterModel(); 
+        filterManager.setCounter(adcm.getCounter());
         
         /** Gui is built here**/
 
         JFrame mainJFrame;
         mainJFrame = new JFrame();
         mainJFrame.setLayout(new BorderLayout());
-        mainJFrame.setTitle("PipirsSolutions canbus sniffer");
+        mainJFrame.setTitle("Pipirs Solutions canbus sniffer");
         mainJFrame.setBackground(Color.BLUE);
 
         mainJFrame.add(scsView,BorderLayout.NORTH);
         mainJFrame.add(canBusView,BorderLayout.WEST);
-        JPanel messageAndFilterPanel = new JPanel(new BorderLayout());
-        messageAndFilterPanel.add(new SendMessageModel(scs),BorderLayout.NORTH);
-        messageAndFilterPanel.add(adsm, BorderLayout.WEST);
-        messageAndFilterPanel.add(fm,BorderLayout.SOUTH);
+        JPanel messageAndFilterPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.weighty = 0.3;
+        c.weightx = 0.3;
+  //      c.insets = new Insets(10,0,0,0);
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridx = 0;
+        c.gridy = 1;
+     //   messageAndFilterPanel.add(new SendMessageModel(scs),BorderLayout.NORTH);
+        messageAndFilterPanel.add(adsm, c);
+        c.fill = GridBagConstraints.HORIZONTAL;  
+        c.gridx = 0;
+        c.gridy = 1;
+        
+        messageAndFilterPanel.add(adcm, c);
+        
+      //  c.insets = new Insets(0,0,0,0);
+        c.fill = GridBagConstraints.VERTICAL;
+        c.gridx = 0;
+        c.gridy =2;
+        
+        messageAndFilterPanel.add(fm,c);
         mainJFrame.add(messageAndFilterPanel, BorderLayout.EAST);
         mainJFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainJFrame.pack();
@@ -118,20 +136,37 @@ public class Sniffer {
         /** connecting ui components to the services**/
     }
     
+    public static class AddCounterModel extends JPanel {
+    	
+    		private JTextField cntr = new JTextField(10);
+    	
+	    	public JTextField getCounter() {
+				return cntr;
+		}
+	    	
+    		public AddCounterModel() {
+	    		JPanel panel = new JPanel(new BorderLayout());
+	    
+	    		BorderLayout bl = new BorderLayout();
+	    		panel.add(cntr, BorderLayout.CENTER );
+	    		
+	    		cntr.setSize(5, 15);
+	        cntr.setSize(5, 15);
+	           
+            add(panel);
+    		
+    		}
+     
+    }
+    
     public static class AddSelectionModel extends JPanel {
     	
     		private JButton copyBtn = new JButton(">>");
     		
-    		private JTextField cntr = new JTextField(10);
-    	
 		private DefaultListModel<CanbusMessage>  m1;
     		private DefaultListModel<CanbusMessage>  m2;
     		private JList l1;
     		private ListFilter lf;
-    		
-    		public JTextField getCounter() {
-				return cntr;
-			}
     		
     		public AddSelectionModel(JList jList, DefaultListModel  messageModel, DefaultListModel filterModel, ListFilter listFilter) {
     			
@@ -175,11 +210,10 @@ public class Sniffer {
                 });
                 
                 copyBtn.setSize(15, 15);
-                cntr.setSize(10, 15);
-                cntr.setSize(10, 5);
+                
                 BorderLayout bl = new BorderLayout();
                 panel.add(copyBtn, BorderLayout.WEST);
-                panel.add(cntr, BorderLayout.CENTER );
+                
                 
                 BorderLayout layout = new BorderLayout();
                 layout.setVgap(5);
